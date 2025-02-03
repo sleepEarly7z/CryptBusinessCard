@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const MyCard = ({ contract }) => {
+const MyCard = ({ contract, account }) => {
     const [minting, setMinting] = useState(false);
 
     const mintNewCard = async () => {
@@ -21,7 +21,7 @@ const MyCard = ({ contract }) => {
     const getCardInfo = async () => {
         try {
             // Call the contract's getCardInfo function
-            const cardInfo = await contract.userCard('0x0419653556b7a1608eD833EcDb266F780cE84b7a');
+            const cardInfo = await contract.userCard(account);
             console.log('Card Info:', cardInfo);
             const cardDetails = await contract.getBusinessCard(cardInfo);
             console.log("Name:", cardDetails.name);
@@ -36,7 +36,7 @@ const MyCard = ({ contract }) => {
     const removeCard = async () => {
         try {
             // Call the contract's removeCard function
-            const cardInfo = await contract.userCard('0x0419653556b7a1608eD833EcDb266F780cE84b7a');
+            const cardInfo = await contract.userCard(account);
             console.log('Card Info:', cardInfo);
             contract.burnCard(cardInfo);
             alert('Card removed successfully!');
