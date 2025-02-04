@@ -1,23 +1,29 @@
 import React from 'react';
 
-const Navbar = () => {
+const Navbar = ({onNavigate}) => {
     return (
         <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
-                    {/* Logo/Brand */}
+                    {/* Logo */}
                     <div className="flex items-center">
-                        <span className="text-xl font-bold text-gray-800">My dApp</span>
+                        <span className="text-xl font-bold text-gray-800"
+                        onClick={() => onNavigate('home')}
+                        >
+                            My dApp
+                        </span>
                     </div>
 
                     {/* Navigation Items */}
                     <div className="hidden sm:flex sm:items-center">
                         <ul className="flex space-x-8">
                             <li>
-                                <a href="#mint" 
-                                   className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                                <button 
+                                    onClick={() => onNavigate('mint')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
                                     Mint
-                                </a>
+                                </button>
                             </li>
                             <li>
                                 <a href="#send" 
@@ -40,7 +46,7 @@ const Navbar = () => {
                         </ul>
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile */}
                     <div className="flex items-center sm:hidden">
                         <button className="text-gray-600 hover:text-gray-900 focus:outline-none">
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +57,7 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Mobile Menu (hidden by default) */}
+            {/* Mobile Menu */}
             <div className="sm:hidden hidden">
                 <div className="px-2 pt-2 pb-3 space-y-1">
                     <a href="#mint" className="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">

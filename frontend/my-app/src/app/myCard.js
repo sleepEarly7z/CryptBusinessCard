@@ -7,7 +7,6 @@ const MyCard = ({ contract, account }) => {
     const mintNewCard = async () => {
         try {
             setMinting(true);
-            // Call the contract's mint function
             contract.mintBusinessCard('John Doe', '123', 'Software Engineer', '123', '123-456-7890');
             alert('Card minted successfully!');
         } catch (error) {
@@ -20,7 +19,6 @@ const MyCard = ({ contract, account }) => {
 
     const getCardInfo = async () => {
         try {
-            // Call the contract's getCardInfo function
             const cardInfo = await contract.userCard(account);
             console.log('Card Info:', cardInfo);
             const cardDetails = await contract.getBusinessCard(cardInfo);
@@ -35,7 +33,6 @@ const MyCard = ({ contract, account }) => {
 
     const removeCard = async () => {
         try {
-            // Call the contract's removeCard function
             const cardInfo = await contract.userCard(account);
             console.log('Card Info:', cardInfo);
             contract.burnCard(cardInfo);
