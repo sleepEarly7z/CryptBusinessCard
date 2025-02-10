@@ -49,13 +49,13 @@ const Mint = ({ contract, account }) => {
                 throw new Error('Transaction failed');
             }
         } catch (error) {
-            console.error('Error minting card:', error);
+            // console.error('Error minting card:', error);
             if (error.code === 'ACTION_REJECTED') {
                 setError('Transaction was rejected by user');
-            } else if (error.data?.message) {
-                setError(error.data.message);
+            } else if (error.message === 'Already owns a business card') {
+                setError("Failed to mint card - You already own a business card");
             } else {
-                setError(error.message || 'Failed to mint card');
+                setError("Failed to mint card - You already own a business card");
             }
         } finally {
             setMinting(false);
