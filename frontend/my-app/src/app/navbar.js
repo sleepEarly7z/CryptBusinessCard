@@ -26,22 +26,20 @@ const Navbar = ({onNavigate}) => {
                                 </button>
                             </li>
                             <li>
-                                <a href="#send" 
-                                   className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                                    Send
-                                </a>
+                                <button
+                                    onClick={() => onNavigate('send')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    Send Card
+                                </button>
                             </li>
                             <li>
-                                <a href="#view" 
-                                   className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                                    View
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#contact" 
-                                   className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                                    Contact
-                                </a>
+                                <button
+                                    onClick={() => onNavigate('view')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    View Received Cards
+                                </button>
                             </li>
                         </ul>
                     </div>

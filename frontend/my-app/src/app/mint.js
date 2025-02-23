@@ -33,7 +33,7 @@ const Mint = ({ contract, account }) => {
                 formData.tokenURI
             );
             
-            // Wait for transaction to be mined
+            // Wait for transaction
             const receipt = await tx.wait();
             
             if (receipt.status === 1) {

@@ -16,12 +16,13 @@ contract BusinessCard is ERC721URIStorage, Ownable {
 
     mapping(uint256 => CardDetails) public businessCards;
     mapping(address => uint256) public userCard;
-    mapping(address => mapping(uint256 => bool)) public receivedCards; // Records received cards
+    mapping(address => mapping(uint256 => bool)) public receivedCards;
+    mapping(address => uint256[]) private userReceivedCards;
 
     event BusinessCardMinted(address indexed owner, uint256 indexed cardId);
     event BusinessCardUpdated(address indexed owner, uint256 indexed cardId);
     event BusinessCardSent(address indexed from, address indexed to, uint256 cardId);
-    event BusinessCardTraded(address indexed from, address indexed to, uint256 myCardId); // Modified to three parameters
+    event BusinessCardTraded(address indexed from, address indexed to, uint256 myCardId);
 
     constructor() ERC721("BusinessCard", "BCARD") Ownable(msg.sender) {}
 
@@ -71,6 +72,7 @@ contract BusinessCard is ERC721URIStorage, Ownable {
         require(ownerOf(_cardId) == msg.sender, "You don't own this card");
 
         receivedCards[_to][_cardId] = true;
+        userReceivedCards[_to].push(_cardId);
 
         emit BusinessCardSent(msg.sender, _to, _cardId);
     }
@@ -98,6 +100,21 @@ contract BusinessCard is ERC721URIStorage, Ownable {
     /// @notice Get business card details
     function getBusinessCard(uint256 _cardId) public view returns (CardDetails memory) {
         return businessCards[_cardId];
+    }
+
+    /// @notice Get all received cards for an address
+    function getReceivedCards(address _owner) public view returns (uint256[] memory) {
+        return userReceivedCards[_owner];
+    }
+
+    /// @notice Get multiple business card details at once
+    function getMultipleBusinessCards(uint256[] memory _cardIds) 
+        public view returns (CardDetails[] memory) {
+        CardDetails[] memory cards = new CardDetails[](_cardIds.length);
+        for(uint i = 0; i < _cardIds.length; i++) {
+            cards[i] = businessCards[_cardIds[i]];
+        }
+        return cards;
     }
 
     /// @notice Burn (delete) a business card
