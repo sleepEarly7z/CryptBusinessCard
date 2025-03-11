@@ -14,7 +14,6 @@ const Navbar = ({onNavigate}) => {
                         </span>
                     </div>
 
-                    {/* Navigation Items */}
                     <div className="hidden sm:flex sm:items-center">
                         <ul className="flex space-x-8">
                             <li>
@@ -41,6 +40,14 @@ const Navbar = ({onNavigate}) => {
                                     View Received Cards
                                 </button>
                             </li>
+                            <li>
+                                <button
+                                    onClick={() => onNavigate('update')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    Update Card
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -55,7 +62,6 @@ const Navbar = ({onNavigate}) => {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
             <div className="sm:hidden hidden">
                 <div className="px-2 pt-2 pb-3 space-y-1">
                     <a href="#mint" className="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">
@@ -66,6 +72,9 @@ const Navbar = ({onNavigate}) => {
                     </a>
                     <a href="#view" className="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">
                         View
+                    </a>
+                    <a href="#update" className="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">
+                        Update
                     </a>
                     <a href="#contact" className="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">
                         Contact

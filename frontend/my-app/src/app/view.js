@@ -9,20 +9,38 @@ const View = ({ contract, account }) => {
     const fetchReceivedCards = async () => {
         setIsLoading(true);
         try {
-            // Get all received card IDs
             const receivedCardIds = Array.from(await contract.getReceivedCards(account));
             console.log('Received card IDs:', receivedCardIds);
             
             if (receivedCardIds.length > 0) {
-                // Get all card details
                 const cardDetails = await contract.getMultipleBusinessCards(receivedCardIds);
-                
                 const ownerPromises = receivedCardIds.map(id => contract.ownerOf(id));
-                const owners = await Promise.all(ownerPromises);
+                const tokenURIPromises = receivedCardIds.map(id => contract.tokenURI(id));
+                
+                const [owners, tokenURIs] = await Promise.all([
+                    Promise.all(ownerPromises),
+                    Promise.all(tokenURIPromises)
+                ]);
+
+                // Fetch metadata and images for all cards
+                const metadataPromises = tokenURIs.map(async uri => {
+                    try {
+                        const httpUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                        const response = await fetch(httpUrl);
+                        const metadata = await response.json();
+                        return metadata.image.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                    } catch (error) {
+                        console.error('Error fetching metadata:', error);
+                        return null;
+                    }
+                });
+
+                const images = await Promise.all(metadataPromises);
                 
                 const cards = receivedCardIds.map((id, index) => ({
                     id: id.toString(),
                     owner: owners[index],
+                    image: images[index],
                     details: {
                         name: cardDetails[index].name,
                         title: cardDetails[index].title,
@@ -78,24 +96,39 @@ const View = ({ contract, account }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {receivedCards.map((card) => (
                         <div key={card.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                            <div className="mb-4">
-                                <h3 className="text-xl font-semibold text-gray-800">{card.details.name}</h3>
-                                <p className="text-gray-500">{card.details.title}</p>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Company:</span> {card.details.company}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Contact:</span> {card.details.contactInfo}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Card ID:</span> {card.id}
-                                </p>
-                                <p className="text-sm text-gray-500 break-all">
-                                    <span className="font-medium">Owner:</span> {card.owner}
-                                </p>
+                            <div className="flex flex-row items-start space-x-4">
+                                {/* Card Details */}
+                                <div className="flex-1">
+                                    <div className="mb-4">
+                                        <h3 className="text-xl font-semibold text-gray-800">{card.details.name}</h3>
+                                        <p className="text-gray-500">{card.details.title}</p>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">Company:</span> {card.details.company}
+                                        </p>
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">Contact:</span> {card.details.contactInfo}
+                                        </p>
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">Card ID:</span> {card.id}
+                                        </p>
+                                        <p className="text-sm text-gray-500 break-all">
+                                            <span className="font-medium">Owner:</span> {card.owner}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {card.image && (
+                                    <div className="flex-shrink-0">
+                                        <img 
+                                            src={card.image} 
+                                            alt="Business Card" 
+                                            className="w-24 h-24 object-cover rounded-lg shadow-md"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

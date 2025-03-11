@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Mint = ({ contract, account }) => {
-    const [minting, setMinting] = useState(false);
+const UpdateCard = ({ contract, account }) => {
+    const [updating, setUpdating] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [image, setImage] = useState(null);
     const [formData, setFormData] = useState({
-        name: '',
         title: '',
         company: '',
         contactInfo: '',
-        tokenURI: ''
     });
     const [error, setError] = useState('');
+    const [cardId, setCardId] = useState(null);
+
+    React.useEffect(() => {
+        const fetchCardId = async () => {
+            try {
+                const userCardId = await contract.userCard(account);
+                setCardId(userCardId);
+            } catch (error) {
+                console.error('Error fetching card ID:', error);
+                setError('Failed to fetch your card ID');
+            }
+        };
+        
+        if (contract && account) {
+            fetchCardId();
+        }
+    }, [contract, account]);
 
     const uploadToIPFS = async (file) => {
         try {
@@ -33,17 +48,15 @@ const Mint = ({ contract, account }) => {
             );
 
             const metadata = {
-                name: formData.name,
-                description: "Digital Business Card NFT",
+                name: "Business Card",
+                description: "Updated Digital Business Card NFT",
                 image: `ipfs://${response.data.IpfsHash}`,
                 attributes: [
-                    { trait_type: "Name", value: formData.name },
                     { trait_type: "Title", value: formData.title },
                     { trait_type: "Company", value: formData.company }
                 ]
             };
 
-            // Upload to IPFS
             const metadataResponse = await axios.post(
                 "https://api.pinata.cloud/pinning/pinJSONToIPFS",
                 metadata,
@@ -73,58 +86,56 @@ const Mint = ({ contract, account }) => {
         }));
     };
 
-    const mintNewCard = async (e) => {
+    const updateCard = async (e) => {
         e.preventDefault();
         setError('');
         
         try {
-            if (!image) {
-                throw new Error('Please select an image');
+            if (!cardId) {
+                throw new Error('No card found to update');
             }
 
-            setMinting(true);
+            setUpdating(true);
             
-            // Upload image and get tokenURI
-            const tokenURI = await uploadToIPFS(image);
+            const tokenURI = image ? await uploadToIPFS(image) : '';
             
-            const tx = await contract.mintBusinessCard(
-                formData.name,
+            const tx = await contract.updateBusinessCard(
+                cardId,
                 formData.title,
                 formData.company,
                 formData.contactInfo,
-                tokenURI
+                tokenURI || ''
             );
             
             const receipt = await tx.wait();
             
             if (receipt.status === 1) {
-                alert('Card minted successfully!');
+                alert('Card updated successfully!');
                 setFormData({
-                    name: '',
                     title: '',
                     company: '',
                     contactInfo: '',
-                    tokenURI: ''
                 });
                 setImage(null);
             } else {
                 throw new Error('Transaction failed');
             }
         } catch (error) {
+            console.error('Update error:', error);
             if (error.code === 'ACTION_REJECTED') {
                 setError('Transaction was rejected by user');
             } else {
                 setError(error.message);
             }
         } finally {
-            setMinting(false);
+            setUpdating(false);
         }
     };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
             <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Mint New Business Card</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Update Business Card</h2>
                 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
@@ -132,21 +143,7 @@ const Mint = ({ contract, account }) => {
                     </div>
                 )}
                 
-                <form onSubmit={mintNewCard} className="space-y-4">
-                    <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Name
-                        </label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required
-                        />
-                    </div>
-                    
+                <form onSubmit={updateCard} className="space-y-4">
                     <div>
                         <label className="block text-gray-700 text-sm font-bold mb-2">
                             Title
@@ -191,25 +188,24 @@ const Mint = ({ contract, account }) => {
                     
                     <div>
                         <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Upload Image
+                            Update Image (Optional)
                         </label>
                         <input
                             type="file"
                             accept="image/*"
                             onChange={(e) => setImage(e.target.files[0])}
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required
                         />
                     </div>
 
                     <button 
                         type="submit"
-                        disabled={minting || uploading}
+                        disabled={updating || uploading}
                         className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
                                  transition duration-200 ease-in-out transform hover:scale-105
                                  disabled:opacity-50 disabled:cursor-not-allowed"
                     >   
-                        {minting ? 'Minting...' : uploading ? 'Uploading...' : 'Mint New Card'}
+                        {updating ? 'Updating...' : uploading ? 'Uploading...' : 'Update Card'}
                     </button>
                 </form>
             </div>
@@ -217,4 +213,4 @@ const Mint = ({ contract, account }) => {
     );
 };
 
-export default Mint;
+export default UpdateCard;
