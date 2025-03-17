@@ -137,6 +137,16 @@ const App = () => {
                                             <p className="text-gray-700"><span className="font-semibold">Company:</span> {cardDetails.company}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Contact:</span> {cardDetails.contactInfo}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Card ID:</span> {cardId.toString()}</p>
+                                            
+                                            {/* OpenSea Button */}
+                                            <a 
+                                                href={`https://testnets.opensea.io/assets/sepolia/${contractAddress}/${cardId}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+                                            >
+                                                View on OpenSea
+                                            </a>
                                         </div>
                                         
                                         {cardImage && (
@@ -163,7 +173,7 @@ const App = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar onNavigate={handleNavigate} />
+            <Navbar onNavigate={handleNavigate} isWalletConnected={walletConnected} />
             {renderContent()}
         </div>
     );

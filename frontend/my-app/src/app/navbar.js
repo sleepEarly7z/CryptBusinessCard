@@ -1,14 +1,21 @@
 import React from 'react';
 
-const Navbar = ({onNavigate}) => {
+const Navbar = ({onNavigate, isWalletConnected}) => {
+    const handleLogoClick = () => {
+        // Only navigate to home if wallet is connected
+        if (isWalletConnected) {
+            onNavigate('home');
+        }
+    };
+
     return (
         <nav className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     {/* Logo */}
                     <div className="flex items-center">
-                        <span className="text-xl font-bold text-gray-800"
-                        onClick={() => onNavigate('home')}
+                        <span className="text-xl font-bold text-gray-800 cursor-pointer"
+                        onClick={handleLogoClick}
                         >
                             My dApp
                         </span>
