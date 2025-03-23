@@ -9,8 +9,12 @@ import businessCard from './BusinessCard.json';
 import Send from './send';
 import View from './view';
 import UpdateCard from './updateCard';
+import RentCard from './rentCard';
+import ViewRentedCards from './viewRentedCards';
+import ManageRental from './manageRental';
 
-const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
+const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
+// const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
 
 const App = () => {
     const [contract, setContract] = useState(null);
@@ -110,6 +114,12 @@ const App = () => {
                 return <View contract={contract} account={account} />;
             case 'update':
                 return <UpdateCard contract={contract} account={account} />;
+            case 'rent':
+                return <RentCard contract={contract} account={account} />;
+            case 'viewRented':
+                return <ViewRentedCards contract={contract} account={account} />;
+            case 'manageRental':
+                return <ManageRental contract={contract} account={account} />;
             default:
                 return (
                     <div className="flex flex-col items-center justify-center min-h-screen p-4">

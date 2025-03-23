@@ -2,9 +2,8 @@ const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helper
 const { expect } = require("chai");
 
 describe("BusinessCard", function() {
-  // Necessary variables for testing
   async function deployBusinessCardFixture() {
-    const [owner, user1, user2] = await ethers.getSigners();
+    const [owner, user1, user2, user3] = await ethers.getSigners();
     
     const BusinessCard = await ethers.getContractFactory("BusinessCard");
     const businessCard = await BusinessCard.deploy();
@@ -17,7 +16,7 @@ describe("BusinessCard", function() {
       tokenURI: "ipfs://xxx"
     };
 
-    return { businessCard, owner, user1, user2, cardDetails };
+    return { businessCard, owner, user1, user2, user3, cardDetails };
   }
 
   describe("Deployment", function() {
@@ -142,6 +141,109 @@ describe("BusinessCard", function() {
         businessCard.connect(user1).tradeCards(user2.address, 1, 2)
       ).to.emit(businessCard, "BusinessCardTraded")
         .withArgs(user1.address, user2.address, 1);
+    });
+  });
+
+  describe("Rental Operations", function() {
+    it("Should rent a card to another user", async function() {
+      const { businessCard, user1, user2, cardDetails } = await loadFixture(deployBusinessCardFixture);
+      
+      await businessCard.connect(user1).mintBusinessCard(
+        cardDetails.name,
+        cardDetails.title,
+        cardDetails.company,
+        cardDetails.contactInfo,
+        cardDetails.tokenURI
+      );
+
+      const duration = 86400; // 24 hours
+      
+
+      await expect(
+        businessCard.connect(user1).rentBusinessCard(1, user2.address, duration)
+      ).to.emit(businessCard, "BusinessCardRented")
+        .withArgs(user1.address, user2.address, 1, duration);
+
+      const [isRented, renter, remainingTime] = await businessCard.getRentalStatus(1);
+      expect(isRented).to.be.true;
+      expect(renter).to.equal(user2.address);
+      expect(remainingTime).to.be.approximately(duration, 5);
+    });
+
+    it("Should allow renter to send card", async function() {
+      const { businessCard, user1, user2, user3, cardDetails } = await loadFixture(deployBusinessCardFixture);
+      
+      await businessCard.connect(user1).mintBusinessCard(
+        cardDetails.name,
+        cardDetails.title,
+        cardDetails.company,
+        cardDetails.contactInfo,
+        cardDetails.tokenURI
+      );
+      await businessCard.connect(user1).rentBusinessCard(1, user2.address, 86400);
+
+      await expect(
+        businessCard.connect(user2).sendBusinessCard(user3.address, 1)
+      ).to.emit(businessCard, "BusinessCardSent")
+        .withArgs(user2.address, user3.address, 1);
+    });
+
+    it("Should end rental properly", async function() {
+      const { businessCard, user1, user2, cardDetails } = await loadFixture(deployBusinessCardFixture);
+      
+      await businessCard.connect(user1).mintBusinessCard(
+        cardDetails.name,
+        cardDetails.title,
+        cardDetails.company,
+        cardDetails.contactInfo,
+        cardDetails.tokenURI
+      );
+      await businessCard.connect(user1).rentBusinessCard(1, user2.address, 86400);
+
+      // End rental
+      await expect(
+        businessCard.connect(user1).endRental(1)
+      ).to.emit(businessCard, "BusinessCardRentalEnded")
+        .withArgs(user1.address, user2.address, 1);
+
+      const [isRented, , ] = await businessCard.getRentalStatus(1);
+      expect(isRented).to.be.false;
+    });
+
+    it("Should get rented cards for user", async function() {
+      const { businessCard, user1, user2, cardDetails } = await loadFixture(deployBusinessCardFixture);
+      
+      await businessCard.connect(user1).mintBusinessCard(
+        cardDetails.name,
+        cardDetails.title,
+        cardDetails.company,
+        cardDetails.contactInfo,
+        cardDetails.tokenURI
+      );
+      await businessCard.connect(user1).rentBusinessCard(1, user2.address, 86400);
+
+      const [cardIds, cards, remainingTimes] = await businessCard.connect(user2).getRentedCards();
+      
+      expect(cardIds.length).to.equal(1);
+      expect(cardIds[0]).to.equal(1);
+      expect(cards[0].name).to.equal(cardDetails.name);
+      expect(remainingTimes[0]).to.be.approximately(86400, 5);
+    });
+
+    it("Should prevent non-owner from renting card", async function() {
+      const { businessCard, user1, user2, user3, cardDetails } = await loadFixture(deployBusinessCardFixture);
+      
+      await businessCard.connect(user1).mintBusinessCard(
+        cardDetails.name,
+        cardDetails.title,
+        cardDetails.company,
+        cardDetails.contactInfo,
+        cardDetails.tokenURI
+      );
+
+      await expect(
+        businessCard.connect(user2).rentBusinessCard(1, user3.address, 86400)
+      ).to.be.revertedWith("Not your business card");
     });
   });
 });

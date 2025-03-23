@@ -55,6 +55,30 @@ const Navbar = ({onNavigate, isWalletConnected}) => {
                                     Update Card
                                 </button>
                             </li>
+                            <li>
+                                <button
+                                    onClick={() => onNavigate('rent')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    Rent Card
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    onClick={() => onNavigate('viewRented')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    View Rented Cards
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    onClick={() => onNavigate('manageRental')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    Manage Rentals
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
