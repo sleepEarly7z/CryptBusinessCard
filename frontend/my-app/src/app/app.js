@@ -13,7 +13,8 @@ import RentCard from './rentCard';
 import ViewRentedCards from './viewRentedCards';
 import ManageRental from './manageRental';
 
-const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
+const contractAddress = '0xf0F4aE40Db8217945fEF1F5Cea089d103181399C';
+// const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
 // const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
 
 const App = () => {
