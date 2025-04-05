@@ -63,7 +63,7 @@ const App = () => {
                 const userCardId = await contract.userCard(account);
                 setCardId(userCardId);
                 
-                if (userCardId.gt(0)) {
+                if (userCardId > 0) {
                     const details = await contract.getBusinessCard(userCardId);
                     setCardDetails({
                         name: details.name,
