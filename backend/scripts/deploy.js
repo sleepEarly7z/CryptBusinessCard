@@ -8,7 +8,7 @@ async function main() {
 
     const contractAddress = await businessCard.getAddress();
 
-    console.log(`✅ BusinessCard deployed at: ${contractAddress}`);
+    console.log(`BusinessCard deployed at: ${contractAddress}`);
 }
 
 main().catch((error) => {

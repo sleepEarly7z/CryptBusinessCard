@@ -24,7 +24,6 @@ const ViewRentedCards = ({ contract, account }) => {
             
             const metadata = await Promise.all(metadataPromises);
             
-            // Combine all data
             const rentedCardsData = cards.map((card, index) => ({
                 id: cardIds[index],
                 name: card.name,
@@ -50,7 +49,7 @@ const ViewRentedCards = ({ contract, account }) => {
     }, [contract, account]);
 
     const formatTimeRemaining = (seconds) => {
-        // Convert BigInt to Number for calculations
+        // Convert BigInt to Number
         const secondsNum = Number(seconds);
         const days = Math.floor(secondsNum / (24 * 60 * 60));
         const hours = Math.floor((secondsNum % (24 * 60 * 60)) / (60 * 60));
