@@ -35,7 +35,6 @@ const App = () => {
 
     const setupCardSenderApproval = async (businessCardContract, recommendationAddress) => {
         try {
-            // Check if already approved
             const isApproved = await businessCardContract.approvedCardSenders(recommendationAddress);
             if (!isApproved) {
                 console.log('Setting card sender approval...');
@@ -226,7 +225,9 @@ const App = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar onNavigate={handleNavigate} isWalletConnected={walletConnected} />
+            <div className="pt-16">
             {renderContent()}
+            </div>
         </div>
     );
 };

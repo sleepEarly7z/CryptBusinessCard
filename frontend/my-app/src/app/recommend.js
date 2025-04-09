@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 
 const Recommend = ({ contract, account, recommendContract }) => {
     const [recommendee, setRecommendee] = useState('');
@@ -7,13 +8,15 @@ const Recommend = ({ contract, account, recommendContract }) => {
     const [receivedCards, setReceivedCards] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pendingRecommendations, setPendingRecommendations] = useState([]);
+    const [tokenBalance, setTokenBalance] = useState('0');
 
     useEffect(() => {
-        if (contract && account) {
+        if (contract && account && recommendContract) {
             fetchReceivedCards();
             fetchPendingRecommendations();
+            fetchTokenBalance();
         }
-    }, [contract, account]);
+    }, [contract, account, recommendContract]);
 
     const fetchReceivedCards = async () => {
         try {
@@ -22,6 +25,15 @@ const Recommend = ({ contract, account, recommendContract }) => {
             console.log('Received cards:', cards);
         } catch (error) {
             console.error('Error fetching received cards:', error);
+        }
+    };
+
+    const fetchTokenBalance = async () => {
+        try {
+            const balance = await recommendContract.balanceOf(account);
+            setTokenBalance(ethers.formatEther(balance));
+        } catch (error) {
+            console.error('Error fetching token balance:', error);
         }
     };
 
@@ -69,6 +81,7 @@ const Recommend = ({ contract, account, recommendContract }) => {
             await tx.wait();
             alert('Recommendation accepted successfully!');
             fetchPendingRecommendations();
+            fetchTokenBalance();
         } catch (error) {
             console.error('Error accepting recommendation:', error);
             alert('Error accepting recommendation: ' + error.message);
@@ -79,6 +92,14 @@ const Recommend = ({ contract, account, recommendContract }) => {
 
     return (
         <div className="container mx-auto p-4">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Recommendations</h1>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600">Your REC Balance</p>
+                    <p className="text-2xl font-bold text-blue-600">{tokenBalance} REC</p>
+                </div>
+            </div>
+
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
                 <h2 className="text-2xl font-bold mb-4">Recommend a Card</h2>
                 <div className="space-y-4">
