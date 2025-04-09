@@ -12,8 +12,14 @@ import UpdateCard from './updateCard';
 import RentCard from './rentCard';
 import ViewRentedCards from './viewRentedCards';
 import ManageRental from './manageRental';
+import Recommend from './recommend';
+import recommendationABI from './CardRecommendation.json';
 
-const contractAddress = '0xf0F4aE40Db8217945fEF1F5Cea089d103181399C';
+
+const recommendAddress = '0x786d55F42BeeB0D7b42f137ba7d953d5ED4E65a6';
+const contractAddress = '0xcEEA7cb32cA4172099BE1e0C682EcAc0C3A3f2C1';
+// const recommendAddress = '0xe2a162B0702561231a0116A3D4FA05f3E1cA1a25';
+// const contractAddress = '0xf0F4aE40Db8217945fEF1F5Cea089d103181399C';
 // const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
 // const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
 
@@ -25,6 +31,25 @@ const App = () => {
     const [walletConnected, setWalletConnected] = useState(false);
     const [currentView, setCurrentView] = useState('home');
     const [cardImage, setCardImage] = useState(null);
+    const [recommendContract, setRecommendContract] = useState(null);
+
+    const setupCardSenderApproval = async (businessCardContract, recommendationAddress) => {
+        try {
+            // Check if already approved
+            const isApproved = await businessCardContract.approvedCardSenders(recommendationAddress);
+            if (!isApproved) {
+                console.log('Setting card sender approval...');
+                const tx = await businessCardContract.setCardSender(recommendationAddress, true);
+                await tx.wait();
+                console.log('Card sender approval set successfully');
+            } else {
+                console.log('Card sender already approved');
+            }
+        } catch (error) {
+            console.error('Error setting card sender approval:', error);
+            alert('Error setting card sender approval. Please try again.');
+        }
+    };
 
     const connectWalletandContract = async () => {
         try {
@@ -48,6 +73,16 @@ const App = () => {
                 signer
             );
             setContract(businessCardContract);
+
+            const recommendationContract = new ethers.Contract(
+                recommendAddress,
+                recommendationABI.abi,
+                signer
+            );
+            setRecommendContract(recommendationContract);
+
+            // Set up card sender approval
+            await setupCardSenderApproval(businessCardContract, recommendAddress);
         } catch (error) {
             console.error('Error connecting wallet:', error);
             setWalletConnected(false);
@@ -121,6 +156,12 @@ const App = () => {
                 return <ViewRentedCards contract={contract} account={account} />;
             case 'manageRental':
                 return <ManageRental contract={contract} account={account} />;
+            case 'recommend':
+                return <Recommend 
+                    contract={contract} 
+                    account={account} 
+                    recommendContract={recommendContract}
+                />;
             default:
                 return (
                     <div className="flex flex-col items-center justify-center min-h-screen p-4">

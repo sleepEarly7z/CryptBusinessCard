@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
-
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -33,6 +32,7 @@ contract BusinessCard is
     mapping(address => uint256[]) private userReceivedCards;
     mapping(uint256 => Rental) public cardRentals;
     mapping(address => uint256[]) private userRentedCards;
+    mapping(address => bool) public approvedCardSenders;
 
     event BusinessCardMinted(address indexed owner, uint256 indexed cardId);
     event BusinessCardUpdated(address indexed owner, uint256 indexed cardId);
@@ -45,15 +45,12 @@ contract BusinessCard is
     constructor() {
         _disableInitializers();
     }
-
     function initialize() public initializer {
         __ERC721_init("BusinessCard", "BCARD");
         __Ownable_init(msg.sender);
         __ERC721URIStorage_init();
         __UUPSUpgradeable_init();
     }
-
-    /// @notice Mint a new business card NFT
     function mintBusinessCard(
         string memory _name, 
         string memory _title, 
@@ -70,7 +67,6 @@ contract BusinessCard is
         _setTokenURI(newCardId, _tokenURI);
         emit BusinessCardMinted(msg.sender, newCardId);
     }
-
     function updateBusinessCard(
         uint256 _cardId, 
         string memory _title, 
@@ -85,24 +81,18 @@ contract BusinessCard is
         _setTokenURI(_cardId, _tokenURI);
         emit BusinessCardUpdated(msg.sender, _cardId);
     }
-
-    function sendBusinessCard(address _to, uint256 _cardId) public onlyOwnerOrRenter(_cardId) {
-        require(ownerOf(_cardId) == msg.sender || 
-                (cardRentals[_cardId].isActive && cardRentals[_cardId].renter == msg.sender), 
-                "Not authorized to send this card");
+    function sendBusinessCard(address _to, uint256 _cardId) public {
+        require(_isAuthorized(_cardId), "Not authorized");
         receivedCards[_to][_cardId] = true;
         userReceivedCards[_to].push(_cardId);
         emit BusinessCardSent(msg.sender, _to, _cardId);
     }
-
     function getBusinessCard(uint256 _cardId) public view returns (CardDetails memory) {
         return businessCards[_cardId];
     }
-
     function getReceivedCards(address _owner) public view returns (uint256[] memory) {
         return userReceivedCards[_owner];
     }
-
     function getMultipleBusinessCards(uint256[] memory _cardIds) 
         public view returns (CardDetails[] memory) {
         CardDetails[] memory cards = new CardDetails[](_cardIds.length);
@@ -111,21 +101,18 @@ contract BusinessCard is
         }
         return cards;
     }
-
     function rentBusinessCard(uint256 _cardId, address _renter, uint256 _duration) public {
-        require(ownerOf(_cardId) == msg.sender, "Not your business card");
-        require(!cardRentals[_cardId].isActive, "Card is already rented");
-        require(_duration > 0, "Duration must be greater than 0");
+        require(ownerOf(_cardId) == msg.sender && !cardRentals[_cardId].isActive && _duration > 0, "Invalid rental");
+        uint256 startTime = block.timestamp;
         cardRentals[_cardId] = Rental({
             renter: _renter,
-            startTime: block.timestamp,
-            endTime: block.timestamp + _duration,
+            startTime: startTime,
+            endTime: startTime + _duration,
             isActive: true
         });
         userRentedCards[_renter].push(_cardId);
         emit BusinessCardRented(msg.sender, _renter, _cardId, _duration);
     }
-
     function endRental(uint256 _cardId) public {
         require(ownerOf(_cardId) == msg.sender || cardRentals[_cardId].renter == msg.sender, 
                 "Only owner or renter can end rental");
@@ -133,7 +120,6 @@ contract BusinessCard is
         cardRentals[_cardId].isActive = false;
         emit BusinessCardRentalEnded(ownerOf(_cardId), cardRentals[_cardId].renter, _cardId);
     }
-
     function getRentalStatus(uint256 _cardId) public view returns (
         bool isRented,
         address renter,
@@ -147,19 +133,20 @@ contract BusinessCard is
             rental.endTime - block.timestamp : 0;
         return (true, rental.renter, remaining);
     }
-
     function getRentedCards() public view returns (
         uint256[] memory cardIds,
         CardDetails[] memory cards,
         uint256[] memory remainingTimes
     ) {
         uint256[] memory rentedCardIds = userRentedCards[msg.sender];
-        uint256 activeCount = 0;
-
-        for(uint i = 0; i < rentedCardIds.length; i++) {
-            if(cardRentals[rentedCardIds[i]].isActive && 
-               cardRentals[rentedCardIds[i]].endTime > block.timestamp) {
-                activeCount++;
+        uint256 timestamp = block.timestamp;
+        
+        uint256 activeCount;
+        for(uint256 i; i < rentedCardIds.length; ++i) {
+            uint256 cardId = rentedCardIds[i];
+            Rental storage rental = cardRentals[cardId];
+            if(rental.isActive && rental.endTime > timestamp) {
+                ++activeCount;
             }
         }
 
@@ -167,28 +154,29 @@ contract BusinessCard is
         cards = new CardDetails[](activeCount);
         remainingTimes = new uint256[](activeCount);
 
-        uint256 j = 0;
-        for(uint i = 0; i < rentedCardIds.length; i++) {
-            if(cardRentals[rentedCardIds[i]].isActive && 
-               cardRentals[rentedCardIds[i]].endTime > block.timestamp) {
-                cardIds[j] = rentedCardIds[i];
-                cards[j] = businessCards[rentedCardIds[i]];
-                remainingTimes[j] = cardRentals[rentedCardIds[i]].endTime - block.timestamp;
-                j++;
+        uint256 j;
+        for(uint256 i; i < rentedCardIds.length && j < activeCount; ++i) {
+            uint256 cardId = rentedCardIds[i];
+            Rental storage rental = cardRentals[cardId];
+            if(rental.isActive && rental.endTime > timestamp) {
+                cardIds[j] = cardId;
+                cards[j] = businessCards[cardId];
+                remainingTimes[j] = rental.endTime - timestamp;
+                ++j;
             }
         }
-
-        return (cardIds, cards, remainingTimes);
     }
-
+    function setCardSender(address _cardSender, bool _isApproved) external onlyOwner {
+        approvedCardSenders[_cardSender] = _isApproved;
+    }
     modifier onlyOwnerOrRenter(uint256 _cardId) {
-        require(
-            ownerOf(_cardId) == msg.sender || 
-            (cardRentals[_cardId].isActive && cardRentals[_cardId].renter == msg.sender && 
-             block.timestamp <= cardRentals[_cardId].endTime),
-            "Not authorized"
-        );
+        require(_isAuthorized(_cardId), "Not authorized");
         _;
+    }
+    function _isAuthorized(uint256 _cardId) internal view returns (bool) {
+        return ownerOf(_cardId) == msg.sender || 
+               (cardRentals[_cardId].isActive && cardRentals[_cardId].renter == msg.sender) ||
+               approvedCardSenders[msg.sender];
     }
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
     uint256[50] private __gap;

@@ -79,6 +79,14 @@ const Navbar = ({onNavigate, isWalletConnected}) => {
                                     Manage Rentals
                                 </button>
                             </li>
+                            <li>
+                                <button
+                                    onClick={() => onNavigate('recommend')}
+                                    className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                                >
+                                    Recommend Card
+                                </button>
+                            </li>
                         </ul>
                     </div>
 

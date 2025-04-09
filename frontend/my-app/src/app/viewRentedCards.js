@@ -10,16 +10,29 @@ const ViewRentedCards = ({ contract, account }) => {
         setIsLoading(true);
         try {
             const [cardIds, cards, remainingTimes] = await contract.getRentedCards();
+            console.log('Rented cards:', cardIds, cards, remainingTimes);
             
-            // Fetch token URIs and metadata for images
             const tokenURIPromises = cardIds.map(id => contract.tokenURI(id));
             const tokenURIs = await Promise.all(tokenURIPromises);
             
-            // Fetch metadata and images
             const metadataPromises = tokenURIs.map(async uri => {
-                const httpUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                const response = await fetch(httpUrl);
-                return response.json();
+                try {
+                    const httpUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                    const response = await fetch(httpUrl);
+                    if (!response.ok) {
+                        console.warn(`Failed to fetch metadata from ${httpUrl}`);
+                        return { image: null };
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn(`Invalid content type from ${httpUrl}: ${contentType}`);
+                        return { image: null };
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.warn('Error fetching metadata:', error);
+                    return { image: null };
+                }
             });
             
             const metadata = await Promise.all(metadataPromises);
@@ -31,7 +44,7 @@ const ViewRentedCards = ({ contract, account }) => {
                 company: card.company,
                 contactInfo: card.contactInfo,
                 remainingTime: remainingTimes[index],
-                image: metadata[index].image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                image: metadata[index]?.image ? metadata[index].image.replace('ipfs://', 'https://ipfs.io/ipfs/') : null
             }));
 
             setRentedCards(rentedCardsData);
