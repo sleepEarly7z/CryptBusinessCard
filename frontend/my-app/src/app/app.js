@@ -80,7 +80,6 @@ const App = () => {
             );
             setRecommendContract(recommendationContract);
 
-            // Set up card sender approval
             await setupCardSenderApproval(businessCardContract, recommendAddress);
         } catch (error) {
             console.error('Error connecting wallet:', error);
@@ -107,7 +106,6 @@ const App = () => {
                         contactInfo: details.contactInfo
                     });
 
-                    // Fetch the tokenURI and image
                     const tokenURI = await contract.tokenURI(userCardId);
                     if (tokenURI) {
                         const httpUrl = tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
@@ -181,7 +179,6 @@ const App = () => {
                                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Your Business Card</h3>
                                     
                                     <div className="flex flex-row items-start space-x-4">
-                                        {/* Card Details */}
                                         <div className="flex-1 space-y-2">
                                             <p className="text-gray-700"><span className="font-semibold">Name:</span> {cardDetails.name}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Title:</span> {cardDetails.title}</p>
@@ -189,7 +186,6 @@ const App = () => {
                                             <p className="text-gray-700"><span className="font-semibold">Contact:</span> {cardDetails.contactInfo}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Card ID:</span> {cardId.toString()}</p>
                                             
-                                            {/* OpenSea Button */}
                                             <a 
                                                 href={`https://testnets.opensea.io/assets/sepolia/${contractAddress}/${cardId}`}
                                                 target="_blank"
@@ -214,7 +210,7 @@ const App = () => {
                             )}
                     
                             <div className="border-t border-gray-200 pt-6">
-                                <MyCard contract={contract} account={account} />
+                                {/* <MyCard contract={contract} account={account} /> */}
                             </div>
                         </div>
                     </div>

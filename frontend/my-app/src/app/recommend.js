@@ -91,74 +91,84 @@ const Recommend = ({ contract, account, recommendContract }) => {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Recommendations</h1>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Your REC Balance</p>
-                    <p className="text-2xl font-bold text-blue-600">{tokenBalance} REC</p>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-auto space-y-6">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-gray-800">Recommendations</h1>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600">Your REC Balance</p>
+                        <p className="text-2xl font-bold text-blue-600">{tokenBalance} REC</p>
+                    </div>
                 </div>
-            </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4">Recommend a Card</h2>
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Recommendee Address:</label>
-                        <input
-                            type="text"
-                            value={recommendee}
-                            onChange={(e) => setRecommendee(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="0x..."
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Select Card:</label>
-                        <select
-                            value={selectedCard}
-                            onChange={(e) => setSelectedCard(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        >
-                            <option value="">Select a card</option>
-                            {receivedCards.map((cardId) => (
-                                <option key={cardId.toString()} value={cardId.toString()}>
-                                    Card #{cardId.toString()}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <button
-                        onClick={recommendCard}
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-                    >
-                        {loading ? 'Processing...' : 'Recommend Card'}
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold mb-4">Pending Recommendations</h2>
-                {pendingRecommendations.length === 0 ? (
-                    <p className="text-gray-500">No pending recommendations</p>
-                ) : (
+                    <h2 className="text-xl font-bold text-gray-800">Recommend a Card</h2>
                     <div className="space-y-4">
-                        {pendingRecommendations.map((rec, index) => (
-                            <div key={index} className="border p-4 rounded-md">
-                                <p className="mb-2">From: {rec.recommender}</p>
-                                <p className="mb-4">Card ID: {rec.cardId.toString()}</p>
-                                <button
-                                    onClick={() => acceptRecommendation(rec.recommender)}
-                                    disabled={loading}
-                                    className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400"
-                                >
-                                    {loading ? 'Processing...' : 'Accept Recommendation'}
-                                </button>
-                            </div>
-                        ))}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                Recommendee Address:
+                            </label>
+                            <input
+                                type="text"
+                                value={recommendee}
+                                onChange={(e) => setRecommendee(e.target.value)}
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                placeholder="0x..."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">
+                                Select Card:
+                            </label>
+                            <select
+                                value={selectedCard}
+                                onChange={(e) => setSelectedCard(e.target.value)}
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            >
+                                <option value="">Select a card</option>
+                                {receivedCards.map((cardId) => (
+                                    <option key={cardId.toString()} value={cardId.toString()}>
+                                        Card #{cardId.toString()}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <button
+                            onClick={recommendCard}
+                            disabled={loading}
+                            className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+                                     transition duration-200 ease-in-out transform hover:scale-105
+                                     disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? 'Processing...' : 'Recommend Card'}
+                        </button>
                     </div>
-                )}
+                </div>
+
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-gray-800">Pending Recommendations</h2>
+                    {pendingRecommendations.length === 0 ? (
+                        <p className="text-gray-500">No pending recommendations</p>
+                    ) : (
+                        <div className="space-y-4">
+                            {pendingRecommendations.map((rec, index) => (
+                                <div key={index} className="border p-4 rounded-md shadow-sm">
+                                    <p className="text-sm text-gray-600 mb-2">From: {rec.recommender}</p>
+                                    <p className="text-sm text-gray-600 mb-4">Card ID: {rec.cardId.toString()}</p>
+                                    <button
+                                        onClick={() => acceptRecommendation(rec.recommender)}
+                                        disabled={loading}
+                                        className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded
+                                                 transition duration-200 ease-in-out transform hover:scale-105
+                                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? 'Processing...' : 'Accept Recommendation'}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
