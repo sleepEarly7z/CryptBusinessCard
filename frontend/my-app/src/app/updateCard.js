@@ -97,14 +97,14 @@ const UpdateCard = ({ contract, account }) => {
 
             setUpdating(true);
             
-            const tokenURI = image ? await uploadToIPFS(image) : '';
+            const tokenURI = image ? await uploadToIPFS(image) : undefined;
             
             const tx = await contract.updateBusinessCard(
                 cardId,
                 formData.title,
                 formData.company,
                 formData.contactInfo,
-                tokenURI || ''
+                tokenURI || undefined
             );
             
             const receipt = await tx.wait();
