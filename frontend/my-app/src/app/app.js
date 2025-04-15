@@ -19,13 +19,6 @@ import recommendationABI from './CardRecommendation.json';
 const recommendAddress = '0x09f8794F31aE0D162E0fd11814F696618F907A9E';
 const contractAddress = '0xD63BCbC1e600E70f8Eef1c181dDFEb70B9472dBF';
 
-// const recommendAddress = '0x786d55F42BeeB0D7b42f137ba7d953d5ED4E65a6';
-// const contractAddress = '0xcEEA7cb32cA4172099BE1e0C682EcAc0C3A3f2C1';
-// const recommendAddress = '0xe2a162B0702561231a0116A3D4FA05f3E1cA1a25';
-// const contractAddress = '0xf0F4aE40Db8217945fEF1F5Cea089d103181399C';
-// const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
-// const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
-
 const App = () => {
     const [contract, setContract] = useState(null);
     const [account, setAccount] = useState([]);

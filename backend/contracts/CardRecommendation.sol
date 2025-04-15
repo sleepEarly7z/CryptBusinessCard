@@ -19,6 +19,8 @@ contract CardRecommendation is ERC20, Ownable {
 
     constructor(address _businessCardContract) ERC20("RecommendToken", "REC") Ownable(msg.sender) {
         businessCardContract = BusinessCard(_businessCardContract);
+        // This will set total supply to 10000, deploy a new token contract
+        // _mint(msg.sender, 10000);
     }
 
     function recommendCard(address _recommendee, uint256 _cardId) external {

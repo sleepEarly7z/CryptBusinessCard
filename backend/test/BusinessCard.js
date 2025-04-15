@@ -220,7 +220,7 @@ describe("BusinessCard", function() {
 
       await expect(
         businessCard.connect(user2).rentBusinessCard(1, user3.address, 86400)
-      ).to.be.revertedWith("Not your business card");
+      ).to.be.revertedWith("Invalid rental");
     });
   });
 });
