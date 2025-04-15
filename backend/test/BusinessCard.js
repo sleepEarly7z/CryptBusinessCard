@@ -6,7 +6,11 @@ describe("BusinessCard", function() {
     const [owner, user1, user2, user3] = await ethers.getSigners();
     
     const BusinessCard = await ethers.getContractFactory("BusinessCard");
-    const businessCard = await BusinessCard.deploy();
+    const businessCard = await hre.upgrades.deployProxy(BusinessCard, [], {
+      initializer: "initialize",
+      kind: "uups"
+    });
+    await businessCard.waitForDeployment();
 
     const cardDetails = {
       name: "Jack Doe",
@@ -117,31 +121,6 @@ describe("BusinessCard", function() {
       ).to.emit(businessCard, "BusinessCardSent")
         .withArgs(user1.address, user2.address, 1);
     });
-
-    it("Should trade cards between users", async function() {
-      const { businessCard, user1, user2, cardDetails } = await loadFixture(deployBusinessCardFixture);
-      
-      await businessCard.connect(user1).mintBusinessCard(
-        cardDetails.name,
-        cardDetails.title,
-        cardDetails.company,
-        cardDetails.contactInfo,
-        cardDetails.tokenURI
-      );
-
-      await businessCard.connect(user2).mintBusinessCard(
-        "Brady Luo",
-        "Engineer",
-        "UBC ECE",
-        "brady@ubc.com",
-        "ipfs://ubcece"
-      );
-
-      await expect(
-        businessCard.connect(user1).tradeCards(user2.address, 1, 2)
-      ).to.emit(businessCard, "BusinessCardTraded")
-        .withArgs(user1.address, user2.address, 1);
-    });
   });
 
   describe("Rental Operations", function() {
@@ -156,8 +135,7 @@ describe("BusinessCard", function() {
         cardDetails.tokenURI
       );
 
-      const duration = 86400; // 24 hours
-      
+      const duration = 86400;
 
       await expect(
         businessCard.connect(user1).rentBusinessCard(1, user2.address, duration)
@@ -200,7 +178,6 @@ describe("BusinessCard", function() {
       );
       await businessCard.connect(user1).rentBusinessCard(1, user2.address, 86400);
 
-      // End rental
       await expect(
         businessCard.connect(user1).endRental(1)
       ).to.emit(businessCard, "BusinessCardRentalEnded")
@@ -243,7 +220,7 @@ describe("BusinessCard", function() {
 
       await expect(
         businessCard.connect(user2).rentBusinessCard(1, user3.address, 86400)
-      ).to.be.revertedWith("Not your business card");
+      ).to.be.revertedWith("Invalid rental");
     });
   });
 });

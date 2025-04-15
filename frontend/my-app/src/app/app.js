@@ -12,9 +12,12 @@ import UpdateCard from './updateCard';
 import RentCard from './rentCard';
 import ViewRentedCards from './viewRentedCards';
 import ManageRental from './manageRental';
+import Recommend from './recommend';
+import recommendationABI from './CardRecommendation.json';
 
-const contractAddress = '0x2bFBD38856e266FEe06ceae2216BD0346093cF3E';
-// const contractAddress = '0x95ca44EcAb338843b66FF00Ef8Ce214C30aa2128';
+
+const recommendAddress = '0x09f8794F31aE0D162E0fd11814F696618F907A9E';
+const contractAddress = '0xD63BCbC1e600E70f8Eef1c181dDFEb70B9472dBF';
 
 const App = () => {
     const [contract, setContract] = useState(null);
@@ -24,6 +27,24 @@ const App = () => {
     const [walletConnected, setWalletConnected] = useState(false);
     const [currentView, setCurrentView] = useState('home');
     const [cardImage, setCardImage] = useState(null);
+    const [recommendContract, setRecommendContract] = useState(null);
+
+    const setupCardSenderApproval = async (businessCardContract, recommendationAddress) => {
+        try {
+            const isApproved = await businessCardContract.approvedCardSenders(recommendationAddress);
+            if (!isApproved) {
+                console.log('Setting card sender approval...');
+                const tx = await businessCardContract.setCardSender(recommendationAddress, true);
+                await tx.wait();
+                console.log('Card sender approval set successfully');
+            } else {
+                console.log('Card sender already approved');
+            }
+        } catch (error) {
+            console.error('Error setting card sender approval:', error);
+            alert('Error setting card sender approval. Please try again.');
+        }
+    };
 
     const connectWalletandContract = async () => {
         try {
@@ -47,6 +68,15 @@ const App = () => {
                 signer
             );
             setContract(businessCardContract);
+
+            const recommendationContract = new ethers.Contract(
+                recommendAddress,
+                recommendationABI.abi,
+                signer
+            );
+            setRecommendContract(recommendationContract);
+
+            await setupCardSenderApproval(businessCardContract, recommendAddress);
         } catch (error) {
             console.error('Error connecting wallet:', error);
             setWalletConnected(false);
@@ -63,7 +93,7 @@ const App = () => {
                 const userCardId = await contract.userCard(account);
                 setCardId(userCardId);
                 
-                if (userCardId.gt(0)) {
+                if (userCardId > 0) {
                     const details = await contract.getBusinessCard(userCardId);
                     setCardDetails({
                         name: details.name,
@@ -72,7 +102,6 @@ const App = () => {
                         contactInfo: details.contactInfo
                     });
 
-                    // Fetch the tokenURI and image
                     const tokenURI = await contract.tokenURI(userCardId);
                     if (tokenURI) {
                         const httpUrl = tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
@@ -120,6 +149,12 @@ const App = () => {
                 return <ViewRentedCards contract={contract} account={account} />;
             case 'manageRental':
                 return <ManageRental contract={contract} account={account} />;
+            case 'recommend':
+                return <Recommend 
+                    contract={contract} 
+                    account={account} 
+                    recommendContract={recommendContract}
+                />;
             default:
                 return (
                     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -140,7 +175,6 @@ const App = () => {
                                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Your Business Card</h3>
                                     
                                     <div className="flex flex-row items-start space-x-4">
-                                        {/* Card Details */}
                                         <div className="flex-1 space-y-2">
                                             <p className="text-gray-700"><span className="font-semibold">Name:</span> {cardDetails.name}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Title:</span> {cardDetails.title}</p>
@@ -148,7 +182,6 @@ const App = () => {
                                             <p className="text-gray-700"><span className="font-semibold">Contact:</span> {cardDetails.contactInfo}</p>
                                             <p className="text-gray-700"><span className="font-semibold">Card ID:</span> {cardId.toString()}</p>
                                             
-                                            {/* OpenSea Button */}
                                             <a 
                                                 href={`https://testnets.opensea.io/assets/sepolia/${contractAddress}/${cardId}`}
                                                 target="_blank"
@@ -173,7 +206,7 @@ const App = () => {
                             )}
                     
                             <div className="border-t border-gray-200 pt-6">
-                                <MyCard contract={contract} account={account} />
+                                {/* <MyCard contract={contract} account={account} /> */}
                             </div>
                         </div>
                     </div>
@@ -184,7 +217,9 @@ const App = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar onNavigate={handleNavigate} isWalletConnected={walletConnected} />
+            <div className="pt-16">
             {renderContent()}
+            </div>
         </div>
     );
 };

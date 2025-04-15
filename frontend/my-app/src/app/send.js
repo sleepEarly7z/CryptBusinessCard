@@ -23,7 +23,6 @@ const Send = ({ contract, account }) => {
                 throw new Error('You do not own a business card');
             }
 
-            // Send the business card
             const tx = await contract.sendBusinessCard(recipientAddress, userCardId);
             await tx.wait();
 
@@ -38,46 +37,48 @@ const Send = ({ contract, account }) => {
     };
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Send Business Card</h2>
-            
-            <form onSubmit={handleSendCard}>
-                <div className="mb-4">
-                    <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 mb-2">
-                        Recipient Address
-                    </label>
-                    <input
-                        type="text"
-                        id="recipient"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={recipientAddress}
-                        onChange={(e) => setRecipientAddress(e.target.value)}
-                        placeholder="0x..."
-                        required
-                    />
-                </div>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Send Business Card</h2>
+                
+                {status && status.startsWith('Error') && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        {status}
+                    </div>
+                )}
 
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full py-2 px-4 rounded-md text-white font-medium 
-                        ${isLoading 
-                            ? 'bg-gray-400 cursor-not-allowed' 
-                            : 'bg-blue-600 hover:bg-blue-700'}`}
-                >
-                    {isLoading ? 'Sending...' : 'Send Business Card'}
-                </button>
-            </form>
+                {status && !status.startsWith('Error') && (
+                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                        {status}
+                    </div>
+                )}
+                
+                <form onSubmit={handleSendCard} className="space-y-4">
+                    <div>
+                        <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Recipient Address
+                        </label>
+                        <input
+                            type="text"
+                            value={recipientAddress}
+                            onChange={(e) => setRecipientAddress(e.target.value)}
+                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="0x..."
+                            required
+                        />
+                    </div>
 
-            {status && (
-                <div className={`mt-4 p-3 rounded-md ${
-                    status.startsWith('Error') 
-                        ? 'bg-red-100 text-red-700' 
-                        : 'bg-green-100 text-green-700'
-                }`}>
-                    {status}
-                </div>
-            )}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+                                 transition duration-200 ease-in-out transform hover:scale-105
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? 'Sending...' : 'Send Business Card'}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

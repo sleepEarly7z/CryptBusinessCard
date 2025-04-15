@@ -10,16 +10,29 @@ const ViewRentedCards = ({ contract, account }) => {
         setIsLoading(true);
         try {
             const [cardIds, cards, remainingTimes] = await contract.getRentedCards();
+            console.log('Rented cards:', cardIds, cards, remainingTimes);
             
-            // Fetch token URIs and metadata for images
             const tokenURIPromises = cardIds.map(id => contract.tokenURI(id));
             const tokenURIs = await Promise.all(tokenURIPromises);
             
-            // Fetch metadata and images
             const metadataPromises = tokenURIs.map(async uri => {
-                const httpUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
-                const response = await fetch(httpUrl);
-                return response.json();
+                try {
+                    const httpUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                    const response = await fetch(httpUrl);
+                    if (!response.ok) {
+                        console.warn(`Failed to fetch metadata from ${httpUrl}`);
+                        return { image: null };
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn(`Invalid content type from ${httpUrl}: ${contentType}`);
+                        return { image: null };
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.warn('Error fetching metadata:', error);
+                    return { image: null };
+                }
             });
             
             const metadata = await Promise.all(metadataPromises);
@@ -31,7 +44,7 @@ const ViewRentedCards = ({ contract, account }) => {
                 company: card.company,
                 contactInfo: card.contactInfo,
                 remainingTime: remainingTimes[index],
-                image: metadata[index].image.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                image: metadata[index]?.image ? metadata[index].image.replace('ipfs://', 'https://ipfs.io/ipfs/') : null
             }));
 
             setRentedCards(rentedCardsData);
@@ -66,60 +79,67 @@ const ViewRentedCards = ({ contract, account }) => {
 
     if (error) {
         return (
-            <div className="p-4 bg-red-100 text-red-700 rounded-md max-w-2xl mx-auto mt-8">
-                {error}
+            <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-auto">
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                        {error}
+                    </div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Your Rented Cards</h2>
-            
-            {rentedCards.length === 0 ? (
-                <div className="text-gray-600 text-center py-8">
-                    You haven't rented any cards yet.
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {rentedCards.map((card) => (
-                        <div key={card.id.toString()} 
-                             className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-gray-800">{card.name}</h3>
-                                    <p className="text-gray-600">{card.title}</p>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full mx-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Rented Cards</h2>
+                
+                {rentedCards.length === 0 ? (
+                    <div className="text-gray-600 text-center py-8">
+                        You haven't rented any cards yet.
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {rentedCards.map((card) => (
+                            <div key={card.id.toString()} 
+                                 className="border rounded-lg p-4 hover:shadow-lg transition-shadow duration-200">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="text-xl font-semibold text-gray-800">{card.name}</h3>
+                                        <p className="text-gray-600">{card.title}</p>
+                                    </div>
+                                    {card.image && (
+                                        <img 
+                                            src={card.image} 
+                                            alt="Business Card" 
+                                            className="w-20 h-20 object-cover rounded-lg shadow-md"
+                                        />
+                                    )}
                                 </div>
-                                {card.image && (
-                                    <img 
-                                        src={card.image} 
-                                        alt="Business Card" 
-                                        className="w-20 h-20 object-cover rounded-lg shadow-md"
-                                    />
-                                )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <p className="text-gray-700"><span className="font-semibold">Company:</span> {card.company}</p>
-                                <p className="text-gray-700"><span className="font-semibold">Contact:</span> {card.contactInfo}</p>
-                                <p className="text-gray-700"><span className="font-semibold">Card ID:</span> {card.id.toString()}</p>
-                                <p className="text-blue-600 font-semibold">
-                                    Time Remaining: {formatTimeRemaining(card.remainingTime)}
-                                </p>
-                            </div>
+                                
+                                <div className="space-y-2">
+                                    <p className="text-gray-700"><span className="font-semibold">Company:</span> {card.company}</p>
+                                    <p className="text-gray-700"><span className="font-semibold">Contact:</span> {card.contactInfo}</p>
+                                    <p className="text-gray-700"><span className="font-semibold">Card ID:</span> {card.id.toString()}</p>
+                                    <p className="text-blue-600 font-semibold">
+                                        Time Remaining: {formatTimeRemaining(card.remainingTime)}
+                                    </p>
+                                </div>
 
-                            <a 
-                                href={`https://testnets.opensea.io/assets/sepolia/${contract.target}/${card.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
-                            >
-                                View on OpenSea
-                            </a>
-                        </div>
-                    ))}
-                </div>
-            )}
+                                <a 
+                                    href={`https://testnets.opensea.io/assets/sepolia/${contract.target}/${card.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-4 inline-block w-full text-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+                                             transition duration-200 ease-in-out transform hover:scale-105"
+                                >
+                                    View on OpenSea
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
