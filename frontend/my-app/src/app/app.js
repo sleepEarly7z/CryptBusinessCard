@@ -16,8 +16,11 @@ import Recommend from './recommend';
 import recommendationABI from './CardRecommendation.json';
 
 
-const recommendAddress = '0x09f8794F31aE0D162E0fd11814F696618F907A9E';
-const contractAddress = '0xD63BCbC1e600E70f8Eef1c181dDFEb70B9472dBF';
+const contractAddress = '0x902eecD95DCd45deA6CCe9952BFE3858bC788845';
+const recommendAddress = '0x2A160734b1B2676758F1B4cDe5A328A1aa57EB92';
+
+// const recommendAddress = '0x09f8794F31aE0D162E0fd11814F696618F907A9E';
+// const contractAddress = '0xD63BCbC1e600E70f8Eef1c181dDFEb70B9472dBF';
 
 const App = () => {
     const [contract, setContract] = useState(null);
@@ -28,6 +31,23 @@ const App = () => {
     const [currentView, setCurrentView] = useState('home');
     const [cardImage, setCardImage] = useState(null);
     const [recommendContract, setRecommendContract] = useState(null);
+
+    const checkWalletConnection = async () => {
+        try {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    setAccount(accounts[0]);
+                    setWalletConnected(true);
+                    return true;
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking wallet connection:', error);
+            return false;
+        }
+    };
 
     const setupCardSenderApproval = async (businessCardContract, recommendationAddress) => {
         try {
@@ -118,10 +138,35 @@ const App = () => {
     };
 
     useEffect(() => {
-        if (walletConnected) {
-            connectWalletandContract();
+        const init = async () => {
+            const isConnected = await checkWalletConnection();
+            if (isConnected) {
+                connectWalletandContract();
+            }
+        };
+        
+        init();
+
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length > 0) {
+                    setAccount(accounts[0]);
+                    setWalletConnected(true);
+                    connectWalletandContract();
+                } else {
+                    setWalletConnected(false);
+                    setAccount(null);
+                    setContract(null);
+                }
+            });
         }
-    }, [walletConnected]);
+
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', () => {});
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (contract && account) {
